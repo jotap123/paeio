@@ -7,7 +7,7 @@ if os.path.isfile('requirements.txt'):
 else:
     install_requires = ''
 
-_VERSION = '0.1'
+_VERSION = '0.0.1'
 print(_VERSION)
 
 setup(
