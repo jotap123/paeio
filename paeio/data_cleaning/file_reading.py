@@ -3,9 +3,9 @@ import numpy as np
 import pandas as pd
 import re
 
-from src.io import io
-from src.data_cleaning.path import get_date_from_names
-from src.data_cleaning.parallelism import applyParallel
+from paeio.io import io
+from paeio.data_cleaning.path import get_date_from_names
+from paeio.data_cleaning.parallelism import applyParallel
 
 logger = logging.getLogger(__name__)
 
