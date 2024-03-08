@@ -5,5 +5,6 @@ azure-storage-file-datalake
 joblib
 numpy
 pandas
-python-dotenv
 pyarrow
+openpyxl
+python-dotenv
