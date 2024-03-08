@@ -128,8 +128,8 @@ def upload_chunks(
         for details.
 
     """
-
-    assert 'chunk_size' in upload_kwargs, "You must pass chunk_size if using upload_mode=chunks"
+    message = "You must pass chunk_size if using upload_mode=chunks"
+    assert 'chunk_size' in upload_kwargs, message
 
     if 'chunk_size' in upload_kwargs:
         chunk_size = upload_kwargs.pop('chunk_size')
@@ -240,7 +240,7 @@ def to_any(
             No modo chunks, precisa explicitar o chunk_size no upload_kwargs.
         conn_type (str): String com serviço de conexão a Azure. Pode ser blob ou gen2.
         **upload_kwargs: Argumentos a serem passados para a upload_data/upload_blob.
-            Ver DataLakeFileClient.upload_data/ ou BlobFileClient/upload_blob para mais detalhes
+            Mais detalhes em DataLakeFileClient.upload_data ou BlobFileClient.upload_blob
     """
 
     service_client = create_blob_service(uri=uri, conn_type=conn_type)
@@ -297,9 +297,17 @@ def read_any(uri, func, conn_type=DEFAULT_BLOB_SERVICE, **kwargs):
         Output da função func
     """
 
+    def close_connections(*connections):
+        for conn in connections:
+            if conn:
+                conn.close()
+                del conn
+
     service_client = create_blob_service(uri, conn_type=conn_type)
     container_name = uri.split('/')[3]
     blob_name = '/'.join(uri.split('/')[4:])
+
+    byte_stream = BytesIO()
 
     if conn_type == 'gen2':
         file_system_client = service_client.get_file_system_client(
@@ -315,8 +323,6 @@ def read_any(uri, func, conn_type=DEFAULT_BLOB_SERVICE, **kwargs):
     assert file_client.exists(), f'Could not find blob in {blob_name}'
 
     try:
-        byte_stream = BytesIO()
-
         if conn_type == 'gen2':
             byte_stream.write(file_client.download_file().readall())
         elif conn_type == 'blob':
@@ -325,36 +331,12 @@ def read_any(uri, func, conn_type=DEFAULT_BLOB_SERVICE, **kwargs):
         byte_stream.seek(0)
         df = func(byte_stream, **kwargs)
 
-        byte_stream.close()
+    except Exception as e:
+        raise Exception(f'Could not read blob in {blob_name}: {e}')
 
-        file_client.close()
-        del file_client
-
-        if conn_type == 'gen2':
-            file_system_client.close()
-            del file_system_client
-
-        service_client.close()
-        del service_client
-
+    finally:
+        close_connections(byte_stream, file_client, file_system_client, service_client)
         gc.collect()
-
-    except:
-        byte_stream.close()
-
-        file_client.close()
-        del file_client
-
-        if conn_type == 'gen2':
-            file_system_client.close()
-            del file_system_client
-
-        service_client.close()
-        del service_client
-
-        gc.collect()
-
-        raise Exception(f'Could not read blob in {blob_name}')
 
     return df
 
@@ -375,7 +357,7 @@ def to_parquet(
         uri (str): String com url a ser escrito o arquivo.
         conn_type (str): String com serviço de conexão a Azure. Pode ser blob ou gen2.
         upload_kwargs (dict): Argumentos a serem passados para a upload_data/upload_blob.
-            Ver DataLakeFileClient.upload_data ou BlobFileClient/upload_blob para mais detalhes
+            Mais detalhes em DataLakeFileClient.upload_data ou BlobFileClient.upload_blob
         **kwargs: Argumentos a serem passados para a função de escrita em parquet.
             Consultar df.to_parquet para mais detalhes.
     """
@@ -402,7 +384,7 @@ def to_excel(
         conn_type (str): String com serviço de conexão a Azure. Pode ser blob ou gen2.
         mode (str): Modo de escrita de excel. No momento somente suporte a 'pandas'.
         upload_kwargs (dict): Argumentos a serem passados para a upload_data/upload_blob.
-            Ver DataLakeFileClient.upload_data ou BlobFileClient/upload_blob para mais detalhes
+            Mais detalhes em DataLakeFileClient.upload_data ou BlobFileClient.upload_blob
         **kwargs: Argumentos a serem passados para a função de escrita em parquet.
             Consultar df.to_parquet para mais detalhes.
     """
@@ -443,7 +425,7 @@ def to_csv(
         conn_type (str): String com serviço de conexão a Azure. Pode ser blob ou gen2.
         encoding (str): String com encoding do arquivo a ser subido.
         upload_kwargs (dict): Argumentos a serem passados para a upload_data/upload_blob.
-            Ver DataLakeFileClient.upload_data ou BlobFileClient/upload_blob para mais detalhes
+            Mais detalhes em DataLakeFileClient.upload_data ou BlobFileClient.upload_blob
         **kwargs: Argumentos a serem passados para a função de escrita em parquet.
             Consultar df.to_parquet para mais detalhes.
     """
