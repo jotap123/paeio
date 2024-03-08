@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - develop
   pull_request:
     branches:
       - main
@@ -10,12 +11,16 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
     steps:
+      - name: Copia os arquivos do repo
+        uses: actions/checkout@v3
+
       - name: Install python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: 3.12
-      
+
       - name: Install requirements
-      run: |
-        pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
