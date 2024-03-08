@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paeio"
-version = "0.0.1.1"
+version = "0.0.1.2"
 authors = [
   { name="João Pedro Alves", email="jotapedro1997@gmail.com" },
   { name="Mauricio (Pae) Araujo", email="mauricio.araujo97@gmail.com" }
@@ -12,12 +12,16 @@ authors = [
 description = "Utilities library for read/write operations and general data cleaning routines"
 readme = "README.md"
 requires-python = ">=3.8"
+dynamic = ["dependencies"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Development Status :: 2 - Pre-Alpha",
 ]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
 
 [project.urls]
 Homepage = "https://github.com/jotap123/paeio/tree/develop"

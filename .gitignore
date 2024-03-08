@@ -7,3 +7,4 @@ dist/
 *.env
 *.ipynb
 .ipynb_checkpoints/
+*.bash

@@ -79,18 +79,3 @@ $ git clone https://github.com/jotap123/paeio.git
 
 - **Title**: Summarize in English
 - **Commit Messages**: In English
-
-### Building the Library
-
-To build the library, you need to have the following libraries installed:
-
-- setuptools
-- wheel
-
-With them installed, navigate to the project's root folder and run the following command:
-
-```bash
-$ python setup.py bdist_wheel
-```
-
-This will generate the package installer file.
