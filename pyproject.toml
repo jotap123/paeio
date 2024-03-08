@@ -10,7 +10,7 @@ authors = [
   { name="Mauricio (Pae) Araujo", email="mauricio.araujo97@gmail.com" }
 ]
 description = "Utilities library for read/write operations and general data cleaning routines"
-readme = "README.md"
+readme = "README.rst"
 requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
