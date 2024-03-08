@@ -38,13 +38,17 @@ Lib install
 For development it's highly recommended to create a separate enviroment. Para isso, rode:
 
 ::
+
    $ conda create -n paeio python==3.X (X >= 9)
+
 ::
    
 For installing via pip, run the following command:
 
 ::
+
    $ pip3 install paeio
+
 ::
 
 io usage:
@@ -53,7 +57,9 @@ io usage:
 For development you only need to run the following command:
 
 ::
+
    $ az login
+
 ::
 
 Follow the command suggested steps and once you complete login you are free to go.
@@ -68,9 +74,12 @@ Credential connections:
 - production: using service principal credentials, very similar to .env connection. You'll need the following variables defined:
 
 ::
+
    $ AZURE_CLIENT_ID
    $ AZURE_CLIENT_SECRET
    $ AZURE_TENANT_ID
+
+::
 
 To contribute to the project:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -78,7 +87,9 @@ To contribute to the project:
 Git clone the project
 
 ::
+
    $ git clone https://github.com/jotap123/paeio.git
+
 ::
 
 Branch creation
@@ -95,12 +106,16 @@ Build da Biblioteca
 ~~~~~~~~~~~~~~~~
 Para executar o build da biblioteca, você precisa ter as seguintes bibliotecas instaladas:
 ::
+
    - setuptools
    - wheel
+
 ::
 
 Com ela instalada, acesse a pasta raiz do projeto e rode o comando abaixo:
 
 ::
+
    $ python setup.py bdist_wheel
+
 ::
