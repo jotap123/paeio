@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "paeio"
+version = "0.0.1"
+authors = [
+  { name="João Pedro Alves", email="jotapedro1997@gmail.com" },
+  { name="Mauricio (Pae) Araujo", email="mauricio.araujo97@gmail.com" }
+]
+description = "Utilities library for read/write operations and general data cleaning routines"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/jotap123/paeio/tree/develop"
+Issues = "https://github.com/jotap123/paeio/issues"
+Linkedin JP = "https://www.linkedin.com/in/jp111/"
+Linkedin Pae = "https://www.linkedin.com/in/mauricio-arauujo/"
