@@ -5,6 +5,7 @@ import json
 import logging
 import tempfile
 import warnings
+
 import pandas as pd
 import numpy as np
 
@@ -500,9 +501,7 @@ def glob(uri, conn_kwargs=DEFAULT_GLOB_CONN_KWARGS, **kwargs):
     # - path: com a parte da url que exista uma pasta
     # - path_suffix: com a query desejada dentro dessa pasta
 
-    # TODO: avaliar as sequencias de regex desse codigo
-    regex = re.compile("^(.*?[\*,\(,\[])")
-    lista = regex.split(blob_name)
+    lista = re.split("^(.*?[\*])", blob_name)
 
     if len(lista) == 1:
         path = lista[0]

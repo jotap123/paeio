@@ -1,13 +1,11 @@
-import logging
+import re
+
 import numpy as np
 import pandas as pd
-import re
 
 from paeio.io import io
 from paeio.data_cleaning.path import get_date_from_names
 from paeio.data_cleaning.parallelism import applyParallel
-
-logger = logging.getLogger(__name__)
 
 
 def load_history(

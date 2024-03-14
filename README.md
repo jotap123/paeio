@@ -13,12 +13,12 @@ This is a versatile Python library aimed at facilitating read/write operations a
 paeio
 ├── README.md
 ├── docs            -> Folder containing files for building the library.
-├── ipp_ds              -> Folder containing the library's code
+├── paeio              -> Folder containing the library's code
 │   ├── data_cleaning         -> Module for data cleaning.
 │   └── io                    -> Module for I/O operations.
 ├── dist             -> Folder containing files for package distribution
 │   ├── __init__.py
-│   └── ipp_ds-0.X-py3-none-any.whl                -> Installation with pip will be done from here.
+│   └── paeio-0.X-py3-none-any.whl               -> Installation with pip will be done from here.
 ├── tests            -> Folder containing test files for validating the package's implementations.
 ├── requirements.txt          -> Required packages to run the project
 └── pyproject.toml                  -> Setup file for generating the package installer.
@@ -31,7 +31,7 @@ paeio
 For development, it's highly recommended to create a separate environment. To do this, run:
 
 ```bash
-$ conda create -n paeio python==3.X (X >= 9)
+$ conda create -n paeio python==3.X #(X >= 7.1)
 ```
 
 For installation via pip, run the following command:
