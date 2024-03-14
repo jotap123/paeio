@@ -7,7 +7,7 @@ from azure.keyvault.secrets import SecretClient
 log = logging.getLogger(__name__)
 
 # Set the logging level for all azure-* libraries
-logger = logging.getLogger('azure')
+logger = logging.getLogger("azure")
 logger.setLevel(logging.ERROR)
 
 

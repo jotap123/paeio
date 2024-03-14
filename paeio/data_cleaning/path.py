@@ -1,15 +1,15 @@
 import re
+
 import pandas as pd
 
 
-def path_join(*args, sep='/'):
-    """ Une partes de um path """
+def path_join(*args, sep="/"):
+    """Une partes de um path"""
     return f"{sep}".join([*args])
 
 
 def get_date_from_names(names_list, sep="_", occ=-1):
-    """ Given a list with filenames, returns the dates contained within each filename
-    """
+    """Given a list with filenames, returns the dates contained within each filename"""
     result_list = []
     for item in names_list:
         if sep == "_":

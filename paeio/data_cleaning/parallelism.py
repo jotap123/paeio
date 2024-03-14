@@ -7,11 +7,11 @@ def applyParallel(
     func,
     n_jobs=-1,
     concat_results=True,
-    backend='loky',
+    backend="loky",
     plot_mode=False,
     verbose_par=0,
     *args,
-    **kwargs
+    **kwargs,
 ):
     """
     Função que implementa o apply do pandas usando backend paralelizavel.
@@ -40,7 +40,7 @@ def applyParallel(
         return name, func(group, *args, **kwargs)
 
     if plot_mode:
-        backend = 'threading'
+        backend = "threading"
         series_par = dict(
             Parallel(n_jobs=n_jobs, backend=backend, verbose=verbose_par)(
                 delayed(temp_func)(func, name, group, ax=ax, *args, **kwargs)

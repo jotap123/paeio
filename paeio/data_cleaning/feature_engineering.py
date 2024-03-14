@@ -4,16 +4,16 @@ import pandas as pd
 
 def create_lag_features(df, group_columns, target_column, num_lags, start=1, step=1):
     """
-        Args:
-            df (pd.DataFrame): dataset
-            group_columns (list): colunas a serem agrupadas
-            target_column (str): coluna a ser aplicada a funcao
-            num_lags (int): numero maximo de lag
-            start (int): numero inicial de lag
-            step (int): intervalo entre os numeros de lag
+    Args:
+        df (pd.DataFrame): dataset
+        group_columns (list): colunas a serem agrupadas
+        target_column (str): coluna a ser aplicada a funcao
+        num_lags (int): numero maximo de lag
+        start (int): numero inicial de lag
+        step (int): intervalo entre os numeros de lag
 
-        Returns:
-            df (pd.DataFrame): dataset com colunas de lag
+    Returns:
+        df (pd.DataFrame): dataset com colunas de lag
     """
     for i in range(start, num_lags + 1, step):
         column_name = f"{target_column}_lag_{i}"
@@ -24,15 +24,15 @@ def create_lag_features(df, group_columns, target_column, num_lags, start=1, ste
 
 def create_ma_features(df, group_columns, target_column, num_periods):
     """
-      Args:
-          df (pd.DataFrame): dataset
-          group_columns (list): colunas a serem agrupadas
-          target_column (str): coluna a ser aplicada a funcao
-          num_periods (int): numero minimo de janelas a serem usadas para a media movel
+    Args:
+        df (pd.DataFrame): dataset
+        group_columns (list): colunas a serem agrupadas
+        target_column (str): coluna a ser aplicada a funcao
+        num_periods (int): numero minimo de janelas a serem usadas para a media movel
 
-      Returns:
-          df (pd.DataFrame): dataset com colunas de ma
-  """
+    Returns:
+        df (pd.DataFrame): dataset com colunas de ma
+    """
 
     column_name = f"{target_column}_ma_{num_periods}"
 
@@ -61,10 +61,7 @@ def month_encoder(month, ref=pd.to_datetime("1990-01-01")):
     return (month.to_period("M") - ref.to_period("M")).n
 
 
-def new_date_encoder(date: pd.Series,
-                     freq: str = 'M',
-                     date_start: str = '1970-01-01'):
-
+def new_date_encoder(date: pd.Series, freq: str = "M", date_start: str = "1970-01-01"):
     """
     Função que retorna uma série com o número do mês/dia relativo
         a data de referência
@@ -80,15 +77,15 @@ def new_date_encoder(date: pd.Series,
 
     date = pd.DatetimeIndex(date)
 
-    if freq == 'M':
+    if freq == "M":
         date = pd.to_datetime(
             np.where(date.day == 1, date, date - pd.offsets.MonthBegin(n=1)),
-            format='%Y-%m-%d'
+            format="%Y-%m-%d",
         )
 
     date_start = pd.DatetimeIndex(np.full_like(date, date_start))
 
-    return date.to_period(freq).astype('int') - date_start.to_period(freq).astype('int')
+    return date.to_period(freq).astype("int") - date_start.to_period(freq).astype("int")
 
 
 def week_encoder(date, ref=pd.to_datetime("1989-12-31")):

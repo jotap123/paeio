@@ -3,13 +3,13 @@ import re
 import numpy as np
 import pandas as pd
 
-from paeio.io import io
-from paeio.data_cleaning.path import get_date_from_names
 from paeio.data_cleaning.parallelism import applyParallel
+from paeio.data_cleaning.path import get_date_from_names
+from paeio.io import io
 
 
 def load_history(
-    glob, initial_date='2019-01-01', sep="-", _format='parquet', columns=None, occ=-1
+    glob, initial_date="2019-01-01", sep="-", _format="parquet", columns=None, occ=-1
 ):
     """Le o dataset de cada mes entre a data inicial e hj e junta em um unico arquivo
 
@@ -24,14 +24,14 @@ def load_history(
     index = all_dates >= initial_date
     files_to_load = all_files[index]
 
-    if _format == 'parquet':
+    if _format == "parquet":
         all_df = pd.concat(
             [io.read_parquet(f, columns=columns) for f in files_to_load],
             sort=True,
         )
-    elif _format == 'csv':
+    elif _format == "csv":
         all_df = pd.concat(
-            [io.read_csv(f, sep=';', decimal=',') for f in files_to_load],
+            [io.read_csv(f, sep=";", decimal=",") for f in files_to_load],
             sort=True,
         )
     else:
@@ -40,7 +40,7 @@ def load_history(
 
 
 def read_whole_path(uri, columns=None):
-    """ Le todos os arquivos de um path """
+    """Le todos os arquivos de um path"""
     final_df = pd.DataFrame()
     for i in io.glob(uri):
         df = io.read_parquet(i, columns=columns)
@@ -49,7 +49,7 @@ def read_whole_path(uri, columns=None):
     return final_df
 
 
-def load_last_file(glob, _format='parquet'):
+def load_last_file(glob, _format="parquet"):
     """Le o ultimo arquivo de um historico de arquivos
 
     Args:
@@ -58,10 +58,10 @@ def load_last_file(glob, _format='parquet'):
     """
     file_to_load = io.glob(glob)[-1]
 
-    if _format == 'parquet':
+    if _format == "parquet":
         df = io.read_parquet(file_to_load)
-    elif _format == 'csv':
-        df = io.read_csv(file_to_load, sep=';', decimal=',')
+    elif _format == "csv":
+        df = io.read_csv(file_to_load, sep=";", decimal=",")
     else:
         df = io.read_excel(file_to_load)
     return df
@@ -73,46 +73,46 @@ def extract_file(
     verbose=0,
     file_func=lambda x: x,
     keep_origin_col=False,
-    errors='raise',
-    mode='read',
-    **kwargs
+    errors="raise",
+    mode="read",
+    **kwargs,
 ):
 
     if verbose > 0:
-        if mode == 'read':
+        if mode == "read":
             print(f"Reading {x['directory'].values[0]}")
-        elif mode == 'rename':
+        elif mode == "rename":
             print(f"Renaming {x['directory'].values[0]}")
 
-    if mode == 'read':
-        dict = {'parquet': io.read_parquet, 'excel': io.read_excel, 'csv': io.read_csv}
-    elif mode == 'rename':
-        dict = {form: io.rename_file for form in ['parquet', 'excel', 'csv']}
+    if mode == "read":
+        dict = {"parquet": io.read_parquet, "excel": io.read_excel, "csv": io.read_csv}
+    elif mode == "rename":
+        dict = {form: io.rename_file for form in ["parquet", "excel", "csv"]}
 
     if file_format in list(dict.keys()):
         func = dict[file_format]
         try:
-            df = func(x['directory'].values[0], **kwargs)
+            df = func(x["directory"].values[0], **kwargs)
 
             if keep_origin_col:
-                df['origin'] = x['directory'].values[0]
+                df["origin"] = x["directory"].values[0]
 
             df = file_func(df)
 
         except Exception as e:
-            if errors == 'raise':
+            if errors == "raise":
                 raise e
-            elif errors == 'ignore':
+            elif errors == "ignore":
                 return pd.DataFrame()
 
     else:
         try:
-            df = file_func(x['directory'].values[0], **kwargs)
+            df = file_func(x["directory"].values[0], **kwargs)
 
         except Exception as e:
-            if errors == 'raise':
+            if errors == "raise":
                 raise e
-            elif errors == 'ignore':
+            elif errors == "ignore":
                 return pd.DataFrame()
 
     return df
@@ -120,19 +120,19 @@ def extract_file(
 
 def datalake_walk(
     base_folder,
-    file_format='parquet',
-    min_date='2000-01-01',
-    last_layer='folder',
-    max_date='2099-12-31',
+    file_format="parquet",
+    min_date="2000-01-01",
+    last_layer="folder",
+    max_date="2099-12-31",
     verbose=0,
     n_jobs=-1,
     file_func=lambda x: x,
-    date_sep='-',
+    date_sep="-",
     occ=-1,
     keep_origin_col=False,
-    errors='raise',
-    mode='read',
-    **kwargs
+    errors="raise",
+    mode="read",
+    **kwargs,
 ):
     """
     Função que permite navegar de forma recursiva dentro de um sistema de pastas
@@ -166,37 +166,39 @@ def datalake_walk(
     min_date = pd.to_datetime(min_date)
     max_date = pd.to_datetime(max_date)
 
-    extension = file_format if file_format != 'excel' else 'xls'
+    extension = file_format if file_format != "excel" else "xls"
 
-    list_folders = [col for col in io.glob(base_folder) if f'.{extension}' in col]
+    list_folders = [col for col in io.glob(base_folder) if f".{extension}" in col]
 
     start = -2
-    date_format = '%Y'
+    date_format = "%Y"
 
-    if last_layer == 'day':
+    if last_layer == "day":
         start = -4
-        date_format = '%Y/%m/%d'
-    elif last_layer == 'month':
+        date_format = "%Y/%m/%d"
+    elif last_layer == "month":
         start = -3
-        date_format = '%Y/%m'
+        date_format = "%Y/%m"
 
-    df_folders = pd.DataFrame(list_folders, columns=['directory'])
-    df_folders['file_name'] = df_folders['directory'].str.split('/').str.get(-1)
+    df_folders = pd.DataFrame(list_folders, columns=["directory"])
+    df_folders["file_name"] = df_folders["directory"].str.split("/").str.get(-1)
 
-    if last_layer != 'folder':
-        df_folders['date'] = pd.to_datetime(
-            df_folders['directory'].str.split('/')
-            .str.slice(start=start, stop=-1).str.join('/'),
-            format=date_format
+    if last_layer != "folder":
+        df_folders["date"] = pd.to_datetime(
+            df_folders["directory"]
+            .str.split("/")
+            .str.slice(start=start, stop=-1)
+            .str.join("/"),
+            format=date_format,
         )
-        df_folders = df_folders.loc[df_folders['date'].between(min_date, max_date)]
+        df_folders = df_folders.loc[df_folders["date"].between(min_date, max_date)]
 
     else:
         try:
-            df_folders['date'] = get_date_from_names(
-                df_folders['directory'], sep=date_sep, occ=occ
+            df_folders["date"] = get_date_from_names(
+                df_folders["directory"], sep=date_sep, occ=occ
             )
-            df_folders = df_folders.loc[df_folders['date'].between(min_date, max_date)]
+            df_folders = df_folders.loc[df_folders["date"].between(min_date, max_date)]
         except:
             pass
 
@@ -211,11 +213,11 @@ def datalake_walk(
             keep_origin_col=keep_origin_col,
             errors=errors,
             mode=mode,
-            **kwargs
+            **kwargs,
         )
     elif len(df_folders) > 1:
         df = applyParallel(
-            df_folders.groupby(['directory']),
+            df_folders.groupby(["directory"]),
             extract_file,
             keep_origin_col=keep_origin_col,
             file_format=file_format,
@@ -224,7 +226,7 @@ def datalake_walk(
             errors=errors,
             n_jobs=n_jobs,
             mode=mode,
-            **kwargs
+            **kwargs,
         ).reset_index(drop=True)
 
     return df
@@ -233,18 +235,18 @@ def datalake_walk(
 def datalake_get_last(
     base_folder,
     file_format,
-    min_date='1900-01-01',
-    last_layer='folder',
-    max_date='2099-12-31',
+    min_date="1900-01-01",
+    last_layer="folder",
+    max_date="2099-12-31",
     verbose=0,
     file_func=lambda x: x,
-    date_sep='-',
+    date_sep="-",
     occ=-1,
     keep_origin_col=False,
     n_jobs=-1,
-    errors='raise',
-    mode='read',
-    **kwargs
+    errors="raise",
+    mode="read",
+    **kwargs,
 ):
     """
     Função que permite navegar de forma recursiva dentro de um sistema de pastas
@@ -280,54 +282,57 @@ def datalake_get_last(
 
     mod_base_folder = base_folder
 
-    regex = re.compile('\(|\{')
+    regex = re.compile("\(|\{")
     group_indexes = [
-        ind for ind, i in enumerate(mod_base_folder.split('/'))
+        ind
+        for ind, i in enumerate(mod_base_folder.split("/"))
         if regex.match(i) is not None
     ]
 
-    extension = file_format if file_format != 'excel' else 'xls'
+    extension = file_format if file_format != "excel" else "xls"
 
-    list_folders = [col for col in io.glob(mod_base_folder) if f'.{extension}' in col]
+    list_folders = [col for col in io.glob(mod_base_folder) if f".{extension}" in col]
 
     start = -2
-    date_format = '%Y'
+    date_format = "%Y"
 
-    if last_layer == 'day':
+    if last_layer == "day":
         start = -4
-        date_format = '%Y/%m/%d'
-    elif last_layer == 'month':
+        date_format = "%Y/%m/%d"
+    elif last_layer == "month":
         start = -3
-        date_format = '%Y/%m'
+        date_format = "%Y/%m"
 
-    df_folders = pd.DataFrame(list_folders, columns=['directory'])
-    df_folders['file_name'] = df_folders['directory'].str.split('/').str.get(-1)
+    df_folders = pd.DataFrame(list_folders, columns=["directory"])
+    df_folders["file_name"] = df_folders["directory"].str.split("/").str.get(-1)
 
-    if last_layer != 'folder':
-        df_folders['date'] = pd.to_datetime(
-            df_folders['directory'].str.split('/')
-            .str.slice(start=start, stop=-1).str.join('/'),
-            format=date_format
+    if last_layer != "folder":
+        df_folders["date"] = pd.to_datetime(
+            df_folders["directory"]
+            .str.split("/")
+            .str.slice(start=start, stop=-1)
+            .str.join("/"),
+            format=date_format,
         )
-        df_folders = df_folders.loc[df_folders['date'].between(min_date, max_date)]
+        df_folders = df_folders.loc[df_folders["date"].between(min_date, max_date)]
 
     else:
         try:
-            df_folders['date'] = get_date_from_names(
-                df_folders['directory'], sep=date_sep, occ=occ
+            df_folders["date"] = get_date_from_names(
+                df_folders["directory"], sep=date_sep, occ=occ
             )
-            df_folders = df_folders.loc[df_folders['date'].between(min_date, max_date)]
+            df_folders = df_folders.loc[df_folders["date"].between(min_date, max_date)]
         except:
             pass
 
-    df_folders['group_base'] = 1
+    df_folders["group_base"] = 1
 
     for col in group_indexes:
-        df_folders[f'group_{col}'] = df_folders['directory'].str.split('/').str.get(col)
+        df_folders[f"group_{col}"] = df_folders["directory"].str.split("/").str.get(col)
 
-    key = ['group_base'] + [f'group_{col}' for col in group_indexes]
+    key = ["group_base"] + [f"group_{col}" for col in group_indexes]
 
-    df_folders = df_folders.sort_values('directory')
+    df_folders = df_folders.sort_values("directory")
     df_folders = df_folders.groupby(key, as_index=False).tail(1)
 
     df = None
@@ -341,12 +346,12 @@ def datalake_get_last(
             file_func=file_func,
             keep_origin_col=keep_origin_col,
             errors=errors,
-            **kwargs
+            **kwargs,
         )
 
     if len(df_folders) > 1:
         df = applyParallel(
-            df_folders.groupby(['directory']),
+            df_folders.groupby(["directory"]),
             extract_file,
             keep_origin_col=keep_origin_col,
             file_format=file_format,
@@ -355,7 +360,7 @@ def datalake_get_last(
             errors=errors,
             mode=mode,
             n_jobs=n_jobs,
-            **kwargs
+            **kwargs,
         ).reset_index(drop=True)
 
     return df

@@ -1,6 +1,6 @@
-import pandas as pd
-
 from datetime import datetime
+
+import pandas as pd
 
 
 def is_weekend(date, include_friday=False):
@@ -50,4 +50,4 @@ def week_to_date_column(week_column, ref=pd.to_datetime("1989-12-31")):
     Returns:
        pd.Series: Coluna com o primeiro dia da semana
     """
-    return pd.to_timedelta(week_column * 7, 'd') + ref
+    return pd.to_timedelta(week_column * 7, "d") + ref
