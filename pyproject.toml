@@ -7,7 +7,6 @@ name = "paeio"
 version = "0.0.2.0"
 authors = [
   { name="João Pedro Alves", email="jotapedro1997@gmail.com" },
-  { name="Mauricio (Pae) Araujo", email="mauricio.araujo97@gmail.com" }
 ]
 description = "Utilities library for read/write operations and general data cleaning routines"
 readme = "README.md"
@@ -27,7 +26,6 @@ dependencies = {file = ["requirements.txt"]}
 Homepage = "https://github.com/jotap123/paeio/tree/develop"
 Issues = "https://github.com/jotap123/paeio/issues"
 Linkedin_JP = "https://www.linkedin.com/in/jp111/"
-Linkedin_Pae = "https://www.linkedin.com/in/mauricio-arauujo/"
 
 [tool.isort]
 profile = "black"
