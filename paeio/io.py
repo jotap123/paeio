@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import tempfile
+import pickle
 import warnings
 from functools import partial
 from io import BytesIO, StringIO
@@ -587,7 +588,7 @@ def read_url(uri, sas_token, _format, **kwargs):
 
 
 def file_exists(path):
-    """Checa se um arquivo de Data Lake Azure existe"""
+    """Checks if an Azure Data Lake file exists"""
     last_dir = path.replace(path.split("/")[-1], "*")
 
     try:
@@ -597,3 +598,13 @@ def file_exists(path):
             return False
     except ResourceNotFoundError:
         return False
+
+
+def save_pickle(model, path):
+    """Save pickle files in an Azure Data Lake"""
+    with tempfile.NamedTemporaryFile() as tfile:
+        pickle.dump(model, open(tfile.name, 'wb'))
+        model_file = open(tfile.name, 'rb')
+        byte_stream = BytesIO()
+        byte_stream.write(model_file.read())
+        to_any(byte_stream, path)
