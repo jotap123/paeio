@@ -6,11 +6,12 @@ from paeio import io
 
 
 def load_last_file(glob, _format="parquet", **kwargs):
-    """Le o ultimo arquivo de um historico de arquivos
+    """
+    Reads the last file from a history.
 
     Args:
         glob (str): path
-        ext (str): Tipo de extensao do arquivo. Default: .parquet
+        _format (str): file format. Default: .parquet
     """
     file_to_load = io.glob(glob)[-1]
 
@@ -91,32 +92,31 @@ def datalake_walk(
     **kwargs,
 ):
     """
-    Função que permite navegar de forma recursiva dentro de um sistema de pastas
-    dividido em anos, meses e dias e concatena os arquivos navegados.
-    Ele permite implementação de lógica incremental a partir do parâmetro min_date.
+    Function that allows recursively navigating within a folder system
+    divided into years, months, and days and concatenates the navigated files.
+    It allows for the implementation of incremental logic based on the min_date parameter.
 
     Args:
-        base_folder (str): Diretório raiz que contem os anos, meses e dias
-        min_date (str): Data mínima desejada
-        file_format (str): Tipo de arquivo a ser lido na pasta.
-            Pode ser parquet, csv ou excel.
-        last_layer (str): Ultima camada de pastas. Pode ser year, month ou day.
-        max_date (str): Data máxima desejada
-        verbose (int): Nivel de verbosidade do codigo.
-            Acima de zero, printa entradas nas pastas
-        n_jobs (int): Numero de jobs maximo a ser usado na paralelização da leitura
-        file_func (func): Função a ser aplicada no momento da leitura
-        date_sep (str): Separador de data em pastas com arquivos com datas no nome
-        occ (int): Ocorrencia do split que a data se encontra em caso de folder
-        keep_origin_col (bool): Manter ou não o nome da coluna de diretorio de origem
-        errors (str): Pode ser 'raise' (quebra codigo quando da erro)
-            ou 'ignore' (segue com dataframe vazio)
-        mode (str): Modo de leitura. Pode ser 'read' para ler o arquivo
-            ou 'rename' para renomear o arquivo
-        **kwargs: Argumentos a serem passados na read_any (ex: sep do read_csv)
+        base_folder (str): Root directory (preferably containing years, months, and days)
+        min_date (str): Desired minimum date
+        file_format (str): Type of file to be read in the folder. Parquet, CSV, or Excel.
+        last_layer (str): Last layer of folders. Can be year, month, or day.
+        max_date (str): Desired maximum date
+        verbose (int): Code verbosity level.
+            Above zero, prints entries in folders
+        n_jobs (int): Maximum number of jobs to be used in parallelizing reading
+        file_func (func): Function to be applied at the time of reading
+        date_sep (str): Date separator in folders with files with dates in the name
+        occ (int): Occurrence of the split where the date is located in case of folder
+        keep_origin_col (bool): Whether or not to keep the original directory column name
+        errors (str): Can be 'raise' (breaks code when error occurs)
+            or 'ignore' (continues with empty dataframe)
+        mode (str): Reading mode. Can be 'read' to read the file
+            or 'rename' to rename the file
+        **kwargs: Arguments to be passed in read_any (e.g., sep for read_csv)
 
     Returns:
-        pd.DataFrame: DataFrame concatenado final com todos os arquivos que foram navegados
+        pd.DataFrame: Final concatenated DataFrame with all the files that were navigated
 
     """
     min_date = pd.to_datetime(min_date)

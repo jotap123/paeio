@@ -4,7 +4,7 @@ import pandas as pd
 
 
 def path_join(*args, sep="/"):
-    """Une partes de um path"""
+    """Concatenate n strings to form a path."""
     return f"{sep}".join([*args])
 
 
