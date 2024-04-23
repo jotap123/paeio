@@ -2,9 +2,9 @@ import gc
 import json
 import logging
 import os
+import pickle
 import re
 import tempfile
-import pickle
 import warnings
 from functools import partial
 from io import BytesIO, StringIO
@@ -474,8 +474,9 @@ def glob(uri, conn_kwargs=DEFAULT_GLOB_CONN_KWARGS, **kwargs):
     Args:
         uri (str): Url with regex pattern.
             Supports:
-                - '*' gets any string between the last character before it and the first after
-                - (word1|word2) allows filtering str with either word1 or word2
+                - '*' gets any string between the last character right before it
+                and the first right after.
+                - (word1|word2) allows filtering str with either word1 or word2.
         conn_kwargs (dict): connection args
         **kwargs (dict): get_paths args
     Returns:
@@ -601,8 +602,8 @@ def file_exists(path):
 def save_pickle(model, path):
     """Save pickle files in an Azure Data Lake"""
     with tempfile.NamedTemporaryFile() as tfile:
-        pickle.dump(model, open(tfile.name, 'wb'))
-        model_file = open(tfile.name, 'rb')
+        pickle.dump(model, open(tfile.name, "wb"))
+        model_file = open(tfile.name, "rb")
         byte_stream = BytesIO()
         byte_stream.write(model_file.read())
         to_any(byte_stream, path)
