@@ -1,8 +1,8 @@
 import pandas as pd
 
+from paeio import io
 from paeio.parallelism import applyParallel
 from paeio.path import get_date_from_names
-from paeio import io
 
 
 def load_last_file(glob, _format="parquet", **kwargs):
