@@ -2,6 +2,7 @@ import gc
 import json
 import logging
 import os
+import pickle
 import re
 import tempfile
 import warnings
@@ -225,16 +226,17 @@ def to_any(
     **upload_kwargs,
 ):
     """
-    Funcao generica de escrita de arquivo na Azure.
+    Generic function for writing data.
 
     Args:
-        byte_stream (stream): Stream de dados a serem subidos
-        uri (url): Url a ser subida o stream de dados
-        upload_mode (str): Modo de upload.'full' (de uma vez só) ou 'chunks' (em pedaços).
-            No modo chunks, precisa explicitar o chunk_size no upload_kwargs.
-        conn_type (str): String com serviço de conexão a Azure. Pode ser blob ou gen2.
-        **upload_kwargs: Argumentos a serem passados para a upload_data/upload_blob.
-            Mais detalhes em DataLakeFileClient.upload_data ou BlobFileClient.upload_blob
+        byte_stream (stream): Data stream to be uploaded
+        uri (url): Target url to receive data stream
+        upload_mode (str): 'full' for direct upload or 'chunks' for uploading in parts.
+            If 'chunks' is set. 'chunk_size' has to be declared in 'upload_kwargs'.
+        conn_type (str): Type of connection to Azure. Can receive 'blob' or 'gen2'.
+        **upload_kwargs: Args to be used with upload_data/upload_blob.
+            See DataLakeFileClient.upload_data ou BlobFileClient/upload_blob documentation
+        for details.
     """
 
     service_client = create_blob_service(uri=uri, conn_type=conn_type)
@@ -279,16 +281,16 @@ def to_any(
 
 def read_any(uri, func, conn_type=DEFAULT_BLOB_SERVICE, **kwargs):
     """
-    Função de download genérico de arquivo na Azure
+    Generic function for reading data.
 
     Args:
-        uri (url): Url a ser subida o stream de dados
-        func: Função de leitura do arquivo
-        conn_type (str): String com serviço de conexão a Azure. Pode ser blob ou gen2.
-        **kwargs: Argumentos a serem passados para a função de leitura
+        uri (url): Url where data will be streamt from
+        func: Reading function
+        conn_type (str): Type of connection to Azure. Can receive 'blob' or 'gen2'.
+        **kwargs: Args to be passed to the Reading function
 
     Returns:
-        Output da função func
+        Output of function 'func'
     """
 
     def close_connections(*connections):
@@ -344,16 +346,17 @@ def to_parquet(
     **kwargs,
 ):
     """
-    Função de escrita para arquivos parquet e consequente subida a Azure.
+    Parquet writing function
 
     Args:
-        df (pd.DataFrame): DataFrame a se escrever em parquet e subir a Azure
-        uri (str): String com url a ser escrito o arquivo.
-        conn_type (str): String com serviço de conexão a Azure. Pode ser blob ou gen2.
-        upload_kwargs (dict): Argumentos a serem passados para a upload_data/upload_blob.
-            Mais detalhes em DataLakeFileClient.upload_data ou BlobFileClient.upload_blob
-        **kwargs: Argumentos a serem passados para a função de escrita em parquet.
-            Consultar df.to_parquet para mais detalhes.
+        df (pd.DataFrame): DataFrame to be uploaded in Azure
+        uri (str): Target URL for data upload
+        conn_type (str): Type of connection to Azure. Can receive 'blob' or 'gen2'.
+        upload_kwargs (dict): Args to be used with upload_data/upload_blob.
+            See DataLakeFileClient.upload_data ou BlobFileClient/upload_blob documentation
+        for details.
+        **kwargs: Args to be used with the parquet reading function.
+            See df.to_parquet for details.
     """
     byte_stream = BytesIO()
     df.to_parquet(byte_stream, use_deprecated_int96_timestamps=True, **kwargs)
@@ -372,15 +375,15 @@ def to_excel(
     **kwargs,
 ):
     """
-    Função de escrita para arquivos excel e consequente subida a Azure.
+    Excel writing function.
 
     Args:
-        df (pd.DataFrame): DataFrame a se escrever em excel e subir a Azure
-        uri (str): String com url a ser escrito o arquivo.
-        conn_type (str): String com serviço de conexão a Azure. Pode ser blob ou gen2.
-        mode (str): Modo de escrita de excel. No momento somente suporte a 'pandas'.
-        upload_kwargs (dict): Argumentos a serem passados para a upload_data/upload_blob.
-            Mais detalhes em DataLakeFileClient.upload_data ou BlobFileClient.upload_blob
+        df (pd.DataFrame): DataFrame to be uploaded in Azure
+        uri (str): Target URL for data upload
+        conn_type (str): Type of connection to Azure. Can receive 'blob' or 'gen2'.
+        upload_kwargs (dict): Args to be used with upload_data/upload_blob.
+            See DataLakeFileClient.upload_data ou BlobFileClient/upload_blob documentation
+        for details.
         **kwargs: Argumentos a serem passados para a função de escrita em parquet.
             Consultar df.to_parquet para mais detalhes.
     """
@@ -412,12 +415,12 @@ def to_csv(
     Função de escrita para arquivos csv e consequente subida a Azure.
 
     Args:
-        df (pd.DataFrame): DataFrame a se escrever em csv e subir a Azure
-        uri (str): String com url a ser escrito o arquivo.
-        conn_type (str): String com serviço de conexão a Azure. Pode ser blob ou gen2.
-        encoding (str): String com encoding do arquivo a ser subido.
-        upload_kwargs (dict): Argumentos a serem passados para a upload_data/upload_blob.
-            Mais detalhes em DataLakeFileClient.upload_data ou BlobFileClient.upload_blob
+        df (pd.DataFrame): DataFrame to be uploaded in Azure
+        uri (str): Target URL for data upload
+        conn_type (str): Type of connection to Azure. Can receive 'blob' or 'gen2'.
+        upload_kwargs (dict): Args to be used with upload_data/upload_blob.
+            See DataLakeFileClient.upload_data ou BlobFileClient/upload_blob documentation
+        for details.
         **kwargs: Argumentos a serem passados para a função de escrita em parquet.
             Consultar df.to_parquet para mais detalhes.
     """
@@ -441,11 +444,11 @@ def to_csv(
 
 def build_re(glob_str):
     """
-    Função que reimplementa o fnmatch.translate.
+    Function that matches a pattern for path recognition.
     Args:
-        glob_str (str): String com glob pattern.
+        glob_str (str): String with glob pattern.
     Returns:
-        str: String traduzida para regex pattern.
+        str: String translated to regex pattern.
     """
 
     opts = re.compile("([.]|[*][*]/|[*]|[?])|(.)")
@@ -466,20 +469,18 @@ def build_re(glob_str):
 
 def glob(uri, conn_kwargs=DEFAULT_GLOB_CONN_KWARGS, **kwargs):
     """
-    Função que permite, dado uma url, pegar todos os endereços de arquivos da pasta que
-    atendam aos requisitos.
+    Function that allows getting all files in a given root directory.
 
     Args:
-        uri (str): Url com padrão fnmatch de regex.
-            Já possuimos alguns recursos com suporte:
-                - * permite pegar qualquer url que possua qualquer string no lugar de *
-                - (word1|word2) permite filtrar urls que contenham as palavras word1 ou word2
-                - dentre outros
-        conn_kwargs (dict): Dicionário com argumentos de conexão a serem passados para a
-            função de get_paths
-        **kwargs (dict): Argumentos da função get_paths
+        uri (str): Url with regex pattern.
+            Supports:
+                - '*' gets any string between the last character right before it
+                and the first right after.
+                - (word1|word2) allows filtering str with either word1 or word2.
+        conn_kwargs (dict): connection args
+        **kwargs (dict): get_paths args
     Returns:
-        list: Lista com url dos diretórios que atendem ao requisito da uri
+        list: List with all files that match the given pattern and are inside root directory.
     """
 
     blob_service = create_blob_service(uri, conn_type="gen2")
@@ -517,7 +518,7 @@ def glob(uri, conn_kwargs=DEFAULT_GLOB_CONN_KWARGS, **kwargs):
         return list_blobs
 
     else:
-        path_suffix = build_re(path_suffix)  # traduz fnmatch para regex
+        path_suffix = build_re(path_suffix)
         result_list = [
             i for i in np.array(list_blobs) if re.search(path_suffix, i) is not None
         ]
@@ -527,13 +528,13 @@ def glob(uri, conn_kwargs=DEFAULT_GLOB_CONN_KWARGS, **kwargs):
 
 def read_parquet(uri, mode="pandas", conn_type=DEFAULT_BLOB_SERVICE, **kwargs):
     """
-    Função de leitura genérica de parquet
+    Generic parquet reading file.
     Args:
-        uri (str): Url do arquivo
-        conn_type (str): String com serviço de conexão a Azure. Pode ser blob ou gen2.
-        **kwargs: Argumentos extras das funções de leitura disponiveis.
+        uri (str): Target URL file
+        conn_type (str): Type of connection to Azure. Can receive 'blob' or 'gen2'.
+        **kwargs: Reader functions extra args.
     Returns:
-        pd.DataFrame: DataFrame desejado
+        pd.DataFrame
     """
     func = {"pandas": pd.read_parquet}
     func = func[mode]
@@ -542,13 +543,13 @@ def read_parquet(uri, mode="pandas", conn_type=DEFAULT_BLOB_SERVICE, **kwargs):
 
 def read_csv(uri, mode="pandas", conn_type=DEFAULT_BLOB_SERVICE, **kwargs):
     """
-    Função de leitura genérica de csv
+    Generic csv reading file.
     Args:
-        uri (str): Url do arquivo
-        conn_type (str): String com serviço de conexão a Azure. Pode ser blob ou gen2.
-        **kwargs: Argumentos extras das funções de leitura disponiveis.
+        uri (str): Target URL file
+        conn_type (str): Type of connection to Azure. Can receive 'blob' or 'gen2'.
+        **kwargs: Reader functions extra args.
     Returns:
-        pd.DataFrame: DataFrame desejado
+        pd.DataFrame
     """
     func = {"pandas": pd.read_csv}
     func = func[mode]
@@ -557,14 +558,13 @@ def read_csv(uri, mode="pandas", conn_type=DEFAULT_BLOB_SERVICE, **kwargs):
 
 def read_excel(uri, mode="pandas", conn_type=DEFAULT_BLOB_SERVICE, **kwargs):
     """
-    Função de leitura genérica de excel
+    Generic excel reading file.
     Args:
-        uri (str): Url do arquivo
-        mode (str): Pode ser 'pandas' para leitura padrão pelo pandas.
-        conn_type (str): String com serviço de conexão a Azure. Pode ser blob ou gen2.
-        **kwargs: Argumentos extras das funções de leitura disponiveis.
+        uri (str): Target URL file
+        conn_type (str): Type of connection to Azure. Can receive 'blob' or 'gen2'.
+        **kwargs: Reader functions extra args.
     Returns:
-        pd.DataFrame: DataFrame desejado
+        pd.DataFrame
     """
 
     # A partir de uma determinada versao, o xlrd parou de dar suporte a xlsx.
@@ -587,7 +587,7 @@ def read_url(uri, sas_token, _format, **kwargs):
 
 
 def file_exists(path):
-    """Checa se um arquivo de Data Lake Azure existe"""
+    """Checks if an Azure Data Lake file exists"""
     last_dir = path.replace(path.split("/")[-1], "*")
 
     try:
@@ -597,3 +597,13 @@ def file_exists(path):
             return False
     except ResourceNotFoundError:
         return False
+
+
+def save_pickle(model, path):
+    """Save pickle files in an Azure Data Lake"""
+    with tempfile.NamedTemporaryFile() as tfile:
+        pickle.dump(model, open(tfile.name, "wb"))
+        model_file = open(tfile.name, "rb")
+        byte_stream = BytesIO()
+        byte_stream.write(model_file.read())
+        to_any(byte_stream, path)
