@@ -217,6 +217,124 @@ def upload_data(
     return file_client
 
 
+def close_connections(*connections):
+    for conn in connections:
+        if conn:
+            conn.close()
+            del conn
+
+
+def read_any(uri, func, conn_type=DEFAULT_BLOB_SERVICE, **kwargs):
+    """
+    Generic function for reading data.
+
+    Args:
+        uri (url): Url where data will be streamt from
+        func: Reading function
+        conn_type (str): Type of connection to Azure. Can receive 'blob' or 'gen2'.
+        **kwargs: Args to be passed to the Reading function
+
+    Returns:
+        Output of function 'func'
+    """
+    service_client = create_blob_service(uri, conn_type=conn_type)
+    container_name = uri.split("/")[3]
+    blob_name = "/".join(uri.split("/")[4:])
+
+    byte_stream = BytesIO()
+
+    if conn_type == "gen2":
+        file_system_client = service_client.get_file_system_client(
+            file_system=container_name
+        )
+        file_client = file_system_client.get_file_client(blob_name)
+
+    elif conn_type == "blob":
+        file_client = service_client.get_blob_client(
+            container=container_name, blob=blob_name
+        )
+
+    assert file_client.exists(), f"Could not find blob in {blob_name}"
+
+    try:
+        if conn_type == "gen2":
+            byte_stream.write(file_client.download_file().readall())
+        elif conn_type == "blob":
+            byte_stream.write(file_client.download_blob().readall())
+
+        byte_stream.seek(0)
+        df = func(byte_stream, **kwargs)
+
+    except Exception as e:
+        raise Exception(f"Could not read blob in {blob_name}: {e}")
+
+    finally:
+        close_connections(byte_stream, file_client, file_system_client, service_client)
+        gc.collect()
+
+    return df
+
+
+def read_parquet(uri, mode="pandas", conn_type=DEFAULT_BLOB_SERVICE, **kwargs):
+    """
+    Generic parquet reading file.
+    Args:
+        uri (str): Target URL file
+        conn_type (str): Type of connection to Azure. Can receive 'blob' or 'gen2'.
+        **kwargs: Reader functions extra args.
+    Returns:
+        pd.DataFrame
+    """
+    func = {"pandas": pd.read_parquet}
+    func = func[mode]
+    return read_any(uri, func, conn_type=conn_type, **kwargs)
+
+
+def read_csv(uri, mode="pandas", conn_type=DEFAULT_BLOB_SERVICE, **kwargs):
+    """
+    Generic csv reading file.
+    Args:
+        uri (str): Target URL file
+        conn_type (str): Type of connection to Azure. Can receive 'blob' or 'gen2'.
+        **kwargs: Reader functions extra args.
+    Returns:
+        pd.DataFrame
+    """
+    func = {"pandas": pd.read_csv}
+    func = func[mode]
+    return read_any(uri, func, conn_type=conn_type, **kwargs)
+
+
+def read_excel(uri, mode="pandas", conn_type=DEFAULT_BLOB_SERVICE, **kwargs):
+    """
+    Generic excel reading file.
+    Args:
+        uri (str): Target URL file
+        conn_type (str): Type of connection to Azure. Can receive 'blob' or 'gen2'.
+        **kwargs: Reader functions extra args.
+    Returns:
+        pd.DataFrame
+    """
+
+    # A partir de uma determinada versao, o xlrd parou de dar suporte a xlsx.
+    # Usa-se por padrão a engine openpyxl. Se ela não for passada, agnt força a engine
+    if (".xlsx" in uri) & ("engine" not in kwargs):
+        kwargs["engine"] = "openpyxl"
+
+    func = {"pandas": pd.read_excel}
+    func = func[mode]
+    return read_any(uri, func, conn_type=conn_type, **kwargs)
+
+
+def read_url(uri, sas_token, _format, **kwargs):
+    """Read from a container with SAS token"""
+    with tempfile.NamedTemporaryFile() as tf:
+        url_tok = uri + sas_token
+        urlretrieve(url_tok, tf.name)
+        df = read_any(uri=tf.name, _format=_format, **kwargs)
+        return df
+
+
 def to_any(
     byte_stream,
     uri,
@@ -266,75 +384,8 @@ def to_any(
         )
 
     finally:
-        file_client.close()
-        del file_client
-
-        if conn_type == "gen2":
-            file_system_client.close()
-            del file_system_client
-
-        service_client.close()
-        del service_client
-
-        gc.collect()
-
-
-def read_any(uri, func, conn_type=DEFAULT_BLOB_SERVICE, **kwargs):
-    """
-    Generic function for reading data.
-
-    Args:
-        uri (url): Url where data will be streamt from
-        func: Reading function
-        conn_type (str): Type of connection to Azure. Can receive 'blob' or 'gen2'.
-        **kwargs: Args to be passed to the Reading function
-
-    Returns:
-        Output of function 'func'
-    """
-
-    def close_connections(*connections):
-        for conn in connections:
-            if conn:
-                conn.close()
-                del conn
-
-    service_client = create_blob_service(uri, conn_type=conn_type)
-    container_name = uri.split("/")[3]
-    blob_name = "/".join(uri.split("/")[4:])
-
-    byte_stream = BytesIO()
-
-    if conn_type == "gen2":
-        file_system_client = service_client.get_file_system_client(
-            file_system=container_name
-        )
-        file_client = file_system_client.get_file_client(blob_name)
-
-    elif conn_type == "blob":
-        file_client = service_client.get_blob_client(
-            container=container_name, blob=blob_name
-        )
-
-    assert file_client.exists(), f"Could not find blob in {blob_name}"
-
-    try:
-        if conn_type == "gen2":
-            byte_stream.write(file_client.download_file().readall())
-        elif conn_type == "blob":
-            byte_stream.write(file_client.download_blob().readall())
-
-        byte_stream.seek(0)
-        df = func(byte_stream, **kwargs)
-
-    except Exception as e:
-        raise Exception(f"Could not read blob in {blob_name}: {e}")
-
-    finally:
         close_connections(byte_stream, file_client, file_system_client, service_client)
         gc.collect()
-
-    return df
 
 
 def to_parquet(
@@ -524,66 +575,6 @@ def glob(uri, conn_kwargs=DEFAULT_GLOB_CONN_KWARGS, **kwargs):
         ]
 
     return result_list
-
-
-def read_parquet(uri, mode="pandas", conn_type=DEFAULT_BLOB_SERVICE, **kwargs):
-    """
-    Generic parquet reading file.
-    Args:
-        uri (str): Target URL file
-        conn_type (str): Type of connection to Azure. Can receive 'blob' or 'gen2'.
-        **kwargs: Reader functions extra args.
-    Returns:
-        pd.DataFrame
-    """
-    func = {"pandas": pd.read_parquet}
-    func = func[mode]
-    return read_any(uri, func, conn_type=conn_type, **kwargs)
-
-
-def read_csv(uri, mode="pandas", conn_type=DEFAULT_BLOB_SERVICE, **kwargs):
-    """
-    Generic csv reading file.
-    Args:
-        uri (str): Target URL file
-        conn_type (str): Type of connection to Azure. Can receive 'blob' or 'gen2'.
-        **kwargs: Reader functions extra args.
-    Returns:
-        pd.DataFrame
-    """
-    func = {"pandas": pd.read_csv}
-    func = func[mode]
-    return read_any(uri, func, conn_type=conn_type, **kwargs)
-
-
-def read_excel(uri, mode="pandas", conn_type=DEFAULT_BLOB_SERVICE, **kwargs):
-    """
-    Generic excel reading file.
-    Args:
-        uri (str): Target URL file
-        conn_type (str): Type of connection to Azure. Can receive 'blob' or 'gen2'.
-        **kwargs: Reader functions extra args.
-    Returns:
-        pd.DataFrame
-    """
-
-    # A partir de uma determinada versao, o xlrd parou de dar suporte a xlsx.
-    # Usa-se por padrão a engine openpyxl. Se ela não for passada, agnt força a engine
-    if (".xlsx" in uri) & ("engine" not in kwargs):
-        kwargs["engine"] = "openpyxl"
-
-    func = {"pandas": pd.read_excel}
-    func = func[mode]
-    return read_any(uri, func, conn_type=conn_type, **kwargs)
-
-
-def read_url(uri, sas_token, _format, **kwargs):
-    """Read from a container with SAS token"""
-    with tempfile.NamedTemporaryFile() as tf:
-        url_tok = uri + sas_token
-        urlretrieve(url_tok, tf.name)
-        df = read_any(uri=tf.name, _format=_format, **kwargs)
-        return df
 
 
 def file_exists(path):

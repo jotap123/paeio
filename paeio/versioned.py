@@ -75,7 +75,7 @@ def extract_file(
     return df
 
 
-def datalake_walk(
+def parallel_read(
     base_folder,
     file_format="parquet",
     min_date="2000-01-01",
